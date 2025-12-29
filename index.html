@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Flash HP</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="background:black;color:white;text-align:center">
+
+<h1>FLASH HP</h1>
+
+<script>
+let track;
+let lastState = "";
+
+async function startCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+    });
+    track = stream.getVideoTracks()[0];
+}
+
+async function flash(on) {
+    if (!track) await startCamera();
+    await track.applyConstraints({
+        advanced: [{ torch: on }]
+    });
+}
+
+async function checkCommand() {
+    const res = await fetch("/api/get");
+    const data = await res.json();
+
+    if (data.state !== lastState) {
+        lastState = data.state;
+        if (data.state === "ON") flash(true);
+        if (data.state === "OFF") flash(false);
+    }
+}
+
+// polling tiap 2 detik
+setInterval(checkCommand, 2000);
+</script>
+
+</body>
+</html>
